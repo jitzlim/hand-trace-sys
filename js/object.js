@@ -24,9 +24,10 @@ let spinVelocity = 0;
 let group, wireMesh, solidMesh, particles;
 
 // Curl-driven squeeze state
-let intentScale = 1;   // set by pinch via controls.js
-let curlFactor  = 0;   // 0 = open, 1 = fist — set each frame
-let prevCurl    = 0;
+let intentScale  = 1;   // set by pinch via controls.js
+let curlFactor   = 0;   // smoothed value used for rendering
+let rawCurl      = 0;   // raw value from gestures, used for swap detection
+let prevCurl     = 0;
 let swapCooldown = 0;
 
 onLangChange(() => {
@@ -87,15 +88,17 @@ export function setObjectScale(scale) {
 
 // Called every frame with the live curl value from gestures.js
 export function updateCurl(factor) {
-  prevCurl   = curlFactor;
-  curlFactor = factor;
+  prevCurl = rawCurl;
+  rawCurl  = factor;
+  // Smooth the curl before using it for visuals — kills landmark jitter
+  curlFactor += (rawCurl - curlFactor) * 0.10;
 
   if (swapCooldown > 0) swapCooldown--;
 
-  // Swap geometry when hand opens after a full squeeze
-  if (prevCurl > 0.7 && curlFactor < 0.3 && swapCooldown === 0) {
+  // Swap geometry on raw value so the threshold fires cleanly
+  if (prevCurl > 0.7 && rawCurl < 0.3 && swapCooldown === 0) {
     _swapGeometry();
-    swapCooldown = 40; // ~1.3 s cooldown
+    swapCooldown = 40;
   }
 }
 
@@ -138,9 +141,11 @@ let audioPulse = 0;
 export function updateAudioReactivity(level) {
   if (!particles) return;
   const boosted = Math.sqrt(Math.max(level, 0));
-  audioPulse = boosted;
-  particles.material.size    = 0.013 + boosted * 0.09;
-  particles.material.opacity = 0.45  + boosted * 0.55;
+  // Lerp toward target — fast attack (0.25), slow decay (0.08)
+  const alpha = boosted > audioPulse ? 0.25 : 0.08;
+  audioPulse += (boosted - audioPulse) * alpha;
+  particles.material.size    = 0.013 + audioPulse * 0.09;
+  particles.material.opacity = 0.45  + audioPulse * 0.55;
 }
 
 export function updateObject() {
