@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CLAY.FORM.SYS</title>
+  <link rel="stylesheet" href="sculpt.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <video id="input-video" playsinline></video>
+  <div id="canvas-container"></div>
+
+  <!-- ── Back to menu ───────────────────────────────── -->
+  <a id="back-btn" href="menu.html">← MENU</a>
+
+  <!-- ── HUD (top-left) ────────────────────────────── -->
+  <div id="sculpt-hud">
+    <div class="sh-title">CLAY.FORM.SYS</div>
+    <div class="sh-divider">━━━━━━━━━━━━━━━━━━━━</div>
+    <div class="sh-row"><span class="sh-label">HANDS</span><span class="sh-value" id="sh-hands">○○</span></div>
+    <div class="sh-row"><span class="sh-label">MODE</span><span class="sh-value" id="sh-mode">ORBIT</span></div>
+    <div class="sh-row"><span class="sh-label">GRABBED</span><span class="sh-value" id="sh-grabbed">—</span></div>
+    <div class="sh-divider">━━━━━━━━━━━━━━━━━━━━</div>
+    <div class="sh-status" id="hud-status">■ INITIALISING...</div>
+  </div>
+
+  <!-- ── Gesture guide (bottom-left) ───────────────── -->
+  <div id="sculpt-guide">
+    <div class="sg-title">GESTURE_GUIDE</div>
+    <div class="sg-divider">────────────────</div>
+    <div class="sg-row" data-sgesture="sculpt">PINCH + PULL → SCULPT</div>
+    <div class="sg-row" data-sgesture="undo">FIST RELEASE → UNDO</div>
+    <div class="sg-row" data-sgesture="twohand">TWO HANDS → ORBIT + ZOOM</div>
+  </div>
+
+  <!-- ── Tracking preview ───────────────────────────── -->
+  <div id="tracking-container">
+    <div id="tracking-header">
+      <span>HAND.CAM</span>
+      <span class="tracking-hint">⇱ DRAG  ↘ RESIZE</span>
+    </div>
+    <canvas id="tracking-canvas"></canvas>
+  </div>
+
+  <script type="module" src="js/sculpt/main.js"></script>
+</body>
+</html>

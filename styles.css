@@ -1,0 +1,351 @@
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #000;
+  overflow: hidden;
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+}
+
+#input-video {
+  display: none;
+}
+
+#canvas-container {
+  position: fixed;
+  inset: 0;
+}
+
+#canvas-container canvas {
+  display: block;
+}
+
+/* ── HUD ──────────────────────────────────────────── */
+
+#hud {
+  position: fixed;
+  top: 28px;
+  left: 28px;
+  color: #39FF14;
+  font-size: 12px;
+  line-height: 1.9;
+  z-index: 100;
+  pointer-events: none;
+  text-shadow: 0 0 8px #39FF14, 0 0 20px rgba(57, 255, 20, 0.3);
+}
+
+.hud-title {
+  font-size: 15px;
+  letter-spacing: 4px;
+  color: #FF00FF;
+  text-shadow: 0 0 12px #FF00FF, 0 0 30px rgba(255, 0, 255, 0.4);
+  margin-bottom: 6px;
+}
+
+.hud-divider {
+  color: #1a1a1a;
+  letter-spacing: 1px;
+  margin: 2px 0;
+  text-shadow: none;
+}
+
+.hud-row {
+  display: flex;
+  gap: 8px;
+}
+
+.hud-label {
+  color: #2a6e2a;
+  text-shadow: none;
+  min-width: 110px;
+}
+
+.hud-value {
+  color: #39FF14;
+}
+
+.hud-status {
+  margin-top: 4px;
+  color: #FF00FF;
+  font-size: 11px;
+  letter-spacing: 1px;
+  animation: blink 1.4s step-end infinite;
+  text-shadow: 0 0 10px #FF00FF;
+}
+
+.hud-color {
+  font-size: 10px;
+  color: #333;
+  text-shadow: none;
+  letter-spacing: 1px;
+  margin-top: 2px;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* ── Audio bar ────────────────────────────────────── */
+
+.hud-audio-bar {
+  letter-spacing: 1px;
+  font-size: 11px;
+}
+
+/* ── Menu link ────────────────────────────────────── */
+
+#menu-btn {
+  position: fixed;
+  top: 28px;
+  right: 120px;
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #1a4a1a;
+  text-decoration: none;
+  border: 1px solid #1a4a1a;
+  padding: 5px 14px;
+  z-index: 200;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+#menu-btn:hover {
+  color: #39FF14;
+  border-color: #39FF14;
+  text-shadow: 0 0 8px #39FF14;
+}
+
+/* ── Settings trigger (top-right) ────────────────── */
+
+#settings-btn {
+  position: fixed;
+  top: 28px;
+  right: 28px;
+  background: none;
+  border: 1px solid #1a4a1a;
+  color: #1a4a1a;
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  padding: 5px 14px;
+  cursor: pointer;
+  z-index: 200;
+  transition: color 0.15s, border-color 0.15s, text-shadow 0.15s;
+}
+
+#settings-btn:hover,
+#settings-btn.active {
+  color: #39FF14;
+  border-color: #39FF14;
+  text-shadow: 0 0 10px #39FF14;
+}
+
+/* ── Settings panel ───────────────────────────────── */
+
+#settings-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 272px;
+  background: rgba(2, 5, 2, 0.97);
+  border-left: 1px solid #1a4a1a;
+  z-index: 160;
+  transform: translateX(100%);
+  transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.8);
+}
+
+#settings-panel.open {
+  transform: translateX(0);
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px 20px 18px;
+  border-bottom: 1px solid #111;
+  color: #FF00FF;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(255, 0, 255, 0.6);
+}
+
+#settings-close {
+  background: none;
+  border: none;
+  color: #2a2a2a;
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 6px;
+  transition: color 0.15s;
+}
+
+#settings-close:hover {
+  color: #FF00FF;
+}
+
+.panel-section {
+  padding: 18px 20px;
+  border-bottom: 1px solid #0d0d0d;
+}
+
+.panel-label {
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: #2a6e2a;
+  margin-bottom: 12px;
+}
+
+.opt-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.opt-btn {
+  background: none;
+  border: 1px solid #1a1a1a;
+  color: #2a2a2a;
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 5px 11px;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s, text-shadow 0.12s, background 0.12s;
+}
+
+.opt-btn:hover {
+  color: #39FF14;
+  border-color: #39FF14;
+  text-shadow: 0 0 6px #39FF14;
+}
+
+.opt-btn.active {
+  color: #39FF14;
+  border-color: #39FF14;
+  text-shadow: 0 0 8px #39FF14;
+  background: rgba(57, 255, 20, 0.06);
+}
+
+/* ── Gesture guide (bottom-left) ─────────────────── */
+
+#gesture-guide {
+  position: fixed;
+  bottom: 28px;
+  left: 28px;
+  font-size: 11px;
+  line-height: 2;
+  letter-spacing: 1px;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.guide-title {
+  color: #FF00FF;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-shadow: 0 0 8px rgba(255, 0, 255, 0.4);
+  margin-bottom: 2px;
+}
+
+.guide-divider {
+  color: #1a1a1a;
+  margin-bottom: 2px;
+}
+
+.guide-row {
+  color: #1f4f1f;
+  text-shadow: none;
+  transition: color 0.1s, text-shadow 0.1s;
+}
+
+.guide-row::before {
+  content: '▸ ';
+  color: inherit;
+}
+
+.guide-row.active {
+  color: #39FF14;
+  text-shadow: 0 0 10px #39FF14, 0 0 24px rgba(57, 255, 20, 0.4);
+}
+
+/* ── Tracking preview — draggable + resizable ─────── */
+
+#tracking-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 210px;
+  height: 170px;
+  min-width: 120px;
+  min-height: 90px;
+  max-width: 520px;
+  max-height: 420px;
+  border: 1px solid #39FF14;
+  box-shadow: 0 0 10px rgba(57, 255, 20, 0.25);
+  background: #000;
+  resize: both;
+  overflow: hidden;
+  z-index: 100;
+  opacity: 0.85;
+  user-select: none;
+}
+
+#tracking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 8px;
+  background: rgba(57, 255, 20, 0.06);
+  border-bottom: 1px solid #1a4a1a;
+  color: #2a6e2a;
+  font-size: 9px;
+  letter-spacing: 2px;
+  cursor: grab;
+  height: 22px;
+}
+
+#tracking-header:active {
+  cursor: grabbing;
+  color: #39FF14;
+}
+
+.tracking-hint {
+  color: #1a2e1a;
+  font-size: 8px;
+  letter-spacing: 1px;
+}
+
+#tracking-canvas {
+  display: block;
+  width: 100%;
+  height: calc(100% - 22px);
+  transform: scaleX(-1); /* mirror to match natural hand movement */
+}
+
+/* ── Scanline overlay ─────────────────────────────── */
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 0, 0, 0.08) 3px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 200;
+}

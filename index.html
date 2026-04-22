@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>手追跡 // HAND.TRACE.SYS</title>
+  <link rel="stylesheet" href="styles.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <video id="input-video" playsinline></video>
+  <div id="canvas-container"></div>
+
+  <!-- ── Menu link (top-right area) ───────────────── -->
+  <a id="menu-btn" href="menu.html">← MENU</a>
+
+  <!-- ── Settings trigger (top-right) ──────────────── -->
+  <button id="settings-btn">⚙ CONFIG</button>
+
+  <!-- ── Settings panel (slides in from right) ─────── -->
+  <div id="settings-panel">
+    <div class="panel-header">
+      <span data-i18n="settings.title">設定 // SYS.CONFIG</span>
+      <button id="settings-close">✕</button>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-label" data-i18n="settings.language">言語</div>
+      <div class="opt-group">
+        <button class="opt-btn" data-setting="lang" data-value="ja">日本語</button>
+        <button class="opt-btn" data-setting="lang" data-value="en">ENGLISH</button>
+        <button class="opt-btn" data-setting="lang" data-value="ko">한국어</button>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-label" data-i18n="settings.tracking">トラッキング</div>
+      <div class="opt-group">
+        <button class="opt-btn" data-setting="handMode" data-value="single">SINGLE</button>
+        <button class="opt-btn" data-setting="handMode" data-value="dual">DUAL</button>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-label" data-i18n="settings.visual">ビジュアル</div>
+      <div class="opt-group">
+        <button class="opt-btn" data-setting="visualMode" data-value="wireframe">WIRE</button>
+        <button class="opt-btn" data-setting="visualMode" data-value="solid">SOLID</button>
+        <button class="opt-btn" data-setting="visualMode" data-value="points">POINTS</button>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-label" data-i18n="settings.bloom">ブルーム</div>
+      <div class="opt-group">
+        <button class="opt-btn" data-setting="bloom" data-value="on">ON</button>
+        <button class="opt-btn" data-setting="bloom" data-value="off">OFF</button>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-label" data-i18n="settings.grain">グレイン強度</div>
+      <div class="opt-group">
+        <button class="opt-btn" data-setting="grain" data-value="off">OFF</button>
+        <button class="opt-btn" data-setting="grain" data-value="low">LOW</button>
+        <button class="opt-btn" data-setting="grain" data-value="high">HIGH</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── HUD (top-left) ────────────────────────────── -->
+  <div id="hud">
+    <div class="hud-title" data-i18n="title">手追跡 // HAND.TRACE.SYS</div>
+    <div class="hud-divider">━━━━━━━━━━━━━━━━━━━━</div>
+
+    <div class="hud-row">
+      <span class="hud-label" data-i18n="labels.hands">検出手</span>
+      <span class="hud-value" id="hud-hands">○○</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-label" data-i18n="labels.gesture">ジェスチャー</span>
+      <span class="hud-value" id="hud-gesture">—</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-label" data-i18n="labels.pinch">ピンチ距離</span>
+      <span class="hud-value" id="hud-pinch">0.00</span>
+    </div>
+
+    <div class="hud-divider">━━━━━━━━━━━━━━━━━━━━</div>
+
+    <div class="hud-row">
+      <span class="hud-label" data-i18n="labels.scale">スケール値</span>
+      <span class="hud-value" id="hud-scale">1.00</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-label" data-i18n="labels.radius">カメラ半径</span>
+      <span class="hud-value" id="hud-radius">5.00</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-label" data-i18n="labels.camX">カメラX</span>
+      <span class="hud-value" id="hud-cam-x">0.00</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-label" data-i18n="labels.camY">カメラY</span>
+      <span class="hud-value" id="hud-cam-y">0.00</span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-label" data-i18n="labels.camZ">カメラZ</span>
+      <span class="hud-value" id="hud-cam-z">0.00</span>
+    </div>
+
+    <div class="hud-divider">━━━━━━━━━━━━━━━━━━━━</div>
+
+    <div class="hud-row">
+      <span class="hud-label" data-i18n="labels.audio">音響レベル</span>
+      <span class="hud-value hud-audio-bar" id="hud-audio">░░░░░░░░░░</span>
+    </div>
+
+    <div class="hud-divider">━━━━━━━━━━━━━━━━━━━━</div>
+
+    <div class="hud-status"  id="hud-status"       data-i18n="status.init">■ カメラ初期化中...</div>
+    <div class="hud-color"   id="hud-color">色相：毒素グリーン</div>
+    <div class="hud-color"   id="hud-geo">形状：トーラスノット</div>
+    <div class="hud-color"   id="hud-audio-status" data-i18n="status.micWait">□ マイク待機中</div>
+  </div>
+
+  <!-- ── Gesture guide (bottom-left) ───────────────── -->
+  <div id="gesture-guide">
+    <div class="guide-title" data-i18n="guideTitle">ジェスチャー_ガイド</div>
+    <div class="guide-divider">────────────────</div>
+    <div class="guide-row" data-gesture="palm">手のひら → 軌道</div>
+    <div class="guide-row" data-gesture="pinch">ピンチ → スケール</div>
+    <div class="guide-row" data-gesture="swipeH">スワイプ 左右 → スピン</div>
+    <div class="guide-row" data-gesture="swipeV">スワイプ 上下 → 色変更</div>
+    <div class="guide-row" data-gesture="fist">グー（長押し） → 形状変更</div>
+    <div class="guide-row" data-gesture="dual">両手間隔 → ズーム</div>
+  </div>
+
+  <!-- ── Tracking preview — draggable + resizable ─── -->
+  <div id="tracking-container">
+    <div id="tracking-header">
+      <span>HAND.CAM</span>
+      <span class="tracking-hint">⇱ DRAG  ↘ RESIZE</span>
+    </div>
+    <canvas id="tracking-canvas"></canvas>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
