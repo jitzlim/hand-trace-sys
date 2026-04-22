@@ -5,18 +5,17 @@ let dataArray = null;
 let active    = false;
 
 export async function initAudio() {
-  if (active) return; // don't double-init
+  if (active) return;
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
 
     const ctx = new AudioContext();
-    // AudioContext starts suspended if created without prior user gesture — force resume
     if (ctx.state === 'suspended') await ctx.resume();
 
     const source = ctx.createMediaStreamSource(stream);
     analyser = ctx.createAnalyser();
     analyser.fftSize = 256;
-    analyser.smoothingTimeConstant = 0.82;
+    analyser.smoothingTimeConstant = 0.60; // was 0.82 — faster response to beats
     source.connect(analyser);
     dataArray = new Uint8Array(analyser.frequencyBinCount);
     active = true;
@@ -28,14 +27,28 @@ export async function initAudio() {
   }
 }
 
-// Returns 0–1 average frequency amplitude with noise gate
-const NOISE_FLOOR = 0.06;
+// Only read the lower 65 % of bins — that's where music energy lives (bass + mids).
+// Upper bins are mostly silence and drag the average way down.
+const FOCUS_RATIO = 0.65;
+const NOISE_FLOOR = 0.04;
+const GAIN        = 2.0;  // amplify after noise gate
+
 export function getAudioLevel() {
   if (!active || !analyser) return 0;
   analyser.getByteFrequencyData(dataArray);
-  let sum = 0;
-  for (const v of dataArray) sum += v;
-  const raw = (sum / dataArray.length) / 255;
+
+  const focusBins = Math.floor(dataArray.length * FOCUS_RATIO);
+  let sum = 0, peak = 0;
+  for (let i = 0; i < focusBins; i++) {
+    sum += dataArray[i];
+    if (dataArray[i] > peak) peak = dataArray[i];
+  }
+
+  // Blend mean + peak: mean tracks overall loudness, peak catches transients
+  const avg     = sum / focusBins / 255;
+  const peakN   = peak / 255;
+  const raw     = avg * 0.55 + peakN * 0.45;
+
   if (raw < NOISE_FLOOR) return 0;
-  return (raw - NOISE_FLOOR) / (1 - NOISE_FLOOR);
+  return Math.min((raw - NOISE_FLOOR) / (1 - NOISE_FLOOR) * GAIN, 1.0);
 }
